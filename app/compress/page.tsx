@@ -7,28 +7,28 @@ import { decompressLZW, DecompressionResult } from "@/lib/lzw/decompress";
 import { addHistoryEntry } from "@/lib/history";
 
 export default function CompressPage() {
-  // Compression input state
+  // State Input Kompresi
   const [file, setFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [mode, setMode] = useState<"pixel" | "file">("pixel");
   const [isCompacting, setIsCompacting] = useState(false);
 
-  // Compression output state
+  // State Output Kompresi
   const [result, setResult] = useState<CompressionResult | null>(null);
   const [compressTimeMs, setCompressTimeMs] = useState<number>(0);
 
-  // Decompression verification state
+  // State Verifikasi Dekompresi
   const [verified, setVerified] = useState<boolean>(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [decompressedPreview, setDecompressedPreview] = useState<string | null>(null);
   const [decompressTimeMs, setDecompressTimeMs] = useState<number>(0);
 
-  // Drag-and-drop state
+  // State Drag-and-drop
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset all states
+  // Reset Semua State
   const handleReset = () => {
     setFile(null);
     setImagePreview(null);
@@ -42,23 +42,21 @@ export default function CompressPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Read file data and populate preview
+  // Baca berkas gambar dan tampilkan pratinjau
   const processFile = (selectedFile: File) => {
     if (!selectedFile.type.startsWith("image/")) {
-      alert("Please upload an image file (PNG, JPG, BMP).");
+      alert("Harap unggah file citra gambar saja (PNG, JPG, BMP).");
       return;
     }
 
     handleReset();
     setFile(selectedFile);
 
-    // Create preview URL
     const reader = new FileReader();
     reader.onload = (e) => {
       const url = e.target?.result as string;
       setImagePreview(url);
 
-      // Extract image dimensions
       const img = new Image();
       img.onload = () => {
         setDimensions({ width: img.width, height: img.height });
@@ -68,7 +66,7 @@ export default function CompressPage() {
     reader.readAsDataURL(selectedFile);
   };
 
-  // Drag handlers
+  // Handlers Drag and Drop
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -99,7 +97,7 @@ export default function CompressPage() {
     fileInputRef.current?.click();
   };
 
-  // Execute LZW Compression
+  // Eksekusi Kompresi LZW
   const handleCompress = async () => {
     if (!file || !imagePreview) return;
     setIsCompacting(true);
@@ -107,14 +105,13 @@ export default function CompressPage() {
     setDecompressedPreview(null);
     setVerifyError(null);
 
-    // Give browser a frame to render loading state
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     const startTime = performance.now();
 
     try {
       if (mode === "pixel") {
-        // Pixel compression mode - Extract RGBA bytes using canvas
+        // Mode piksel - Ekstraksi RGBA byte citra menggunakan canvas
         const img = new Image();
         img.src = imagePreview;
         await new Promise((resolve, reject) => {
@@ -126,13 +123,13 @@ export default function CompressPage() {
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext("2d");
-        if (!ctx) throw new Error("Failed to get canvas context.");
+        if (!ctx) throw new Error("Gagal memuat canvas context gambar.");
 
         ctx.drawImage(img, 0, 0);
         const imgData = ctx.getImageData(0, 0, img.width, img.height);
         const rgbaBytes = new Uint8Array(imgData.data.buffer);
 
-        // Compress pixel array
+        // Jalankan kompresi array piksel
         const compResult = compressLZW(rgbaBytes, {
           mode: "pixel",
           filename: file.name,
@@ -145,7 +142,7 @@ export default function CompressPage() {
         setCompressTimeMs(Math.round(endTime - startTime));
         setResult(compResult);
 
-        // Add entry to history
+        // Tambah histori sesi
         addHistoryEntry({
           fileName: file.name,
           fileType: file.type.split("/")[1].toUpperCase(),
@@ -157,11 +154,11 @@ export default function CompressPage() {
         });
 
       } else {
-        // Binary File mode - Compress file binary bytes directly
+        // Mode file biner - Kompresi byte biner berkas asli secara langsung
         const fileBuffer = await file.arrayBuffer();
         const fileBytes = new Uint8Array(fileBuffer);
 
-        // Compress raw binary bytes
+        // Jalankan kompresi byte biner
         const compResult = compressLZW(fileBytes, {
           mode: "file",
           filename: file.name,
@@ -172,7 +169,7 @@ export default function CompressPage() {
         setCompressTimeMs(Math.round(endTime - startTime));
         setResult(compResult);
 
-        // Add entry to history
+        // Tambah histori sesi
         addHistoryEntry({
           fileName: file.name,
           fileType: file.type.split("/")[1].toUpperCase(),
@@ -185,13 +182,13 @@ export default function CompressPage() {
       }
     } catch (err: any) {
       console.error(err);
-      alert(`Compression failed: ${err.message}`);
+      alert(`Kompresi gagal dijalankan: ${err.message}`);
     } finally {
       setIsCompacting(false);
     }
   };
 
-  // Run Decompression Verification
+  // Verifikasi Hasil Dekompresi
   const handleVerifyDecompress = async () => {
     if (!result) return;
     
@@ -200,22 +197,21 @@ export default function CompressPage() {
       const decompResult = decompressLZW(result.compressedData);
       
       if (decompResult.mode === "pixel" && decompResult.width && decompResult.height) {
-        // Reconstruct pixel image from RGBA array
+        // Bangun kembali citra dari RGBA array
         const canvas = document.createElement("canvas");
         canvas.width = decompResult.width;
         canvas.height = decompResult.height;
         const ctx = canvas.getContext("2d");
-        if (!ctx) throw new Error("Failed to create canvas context for decompression preview.");
+        if (!ctx) throw new Error("Gagal membuat canvas context untuk dekompresi piksel.");
 
         const imgData = ctx.createImageData(decompResult.width, decompResult.height);
-        // Cast Uint8Array to Uint8ClampedArray
         imgData.data.set(new Uint8ClampedArray(decompResult.originalData.buffer));
         ctx.putImageData(imgData, 0, 0);
 
         const decompUrl = canvas.toDataURL();
         setDecompressedPreview(decompUrl);
       } else {
-        // Reconstruct binary image file (create ObjectURL from bytes blob)
+        // Bangun kembali berkas gambar asli (ObjectURL dari bytes blob)
         const blob = new Blob([decompResult.originalData as any], { type: file?.type || "image/png" });
         const decompUrl = URL.createObjectURL(blob);
         setDecompressedPreview(decompUrl);
@@ -225,7 +221,7 @@ export default function CompressPage() {
       setVerifyError(null);
     } catch (err: any) {
       console.error(err);
-      setVerifyError(err.message || "Integrity verification failed.");
+      setVerifyError(err.message || "Uji verifikasi integritas data gagal.");
       setVerified(false);
     } finally {
       const endTime = performance.now();
@@ -233,7 +229,7 @@ export default function CompressPage() {
     }
   };
 
-  // Trigger Download of .lzw file
+  // Unduh Berkas .lzw
   const handleDownload = () => {
     if (!result) return;
     
@@ -241,14 +237,14 @@ export default function CompressPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${file?.name || "image"}.lzw`;
+    link.download = `${file?.name || "citra"}.lzw`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
-  // Format bytes for display
+  // Format Tampilan Kapasitas Data Byte
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 B";
     const k = 1024;
@@ -257,21 +253,18 @@ export default function CompressPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // Extract visual representation of first few steps dictionary
+  // Subset entri kamus awal untuk diinspeksi
   const getDictionarySubset = () => {
     if (!result) return [];
     
-    // Build dictionary representations from the trace steps
     const entries: { code: number; sequence: string }[] = [];
     const seen = new Set<number>();
     
-    // Add default single byte entries if we want to show examples
     for (let i = 0; i < 5; i++) {
       entries.push({ code: i, sequence: `[${i}]` });
       seen.add(i);
     }
 
-    // Capture added keys from results steps
     result.steps.forEach((step) => {
       if (step.newCode && !seen.has(step.newCode) && step.lookaheadKey) {
         entries.push({
@@ -282,7 +275,7 @@ export default function CompressPage() {
       }
     });
 
-    return entries.slice(0, 100); // limit to 100 entries
+    return entries.slice(0, 100);
   };
 
   const dictionarySubset = getDictionarySubset();
@@ -293,14 +286,14 @@ export default function CompressPage() {
 
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 md:px-8 py-8 flex flex-col lg:flex-row gap-8">
         
-        {/* LEFT PANEL: Uploader & Control Panel */}
+        {/* PANEL KIRI: Uploader & Pengaturan Mode */}
         <div className="flex-1 flex flex-col gap-6 lg:max-w-[500px]">
           <div className="bg-surface-1 border border-hairline rounded-lg p-6">
             <h2 className="font-sans font-semibold text-[18px] text-ink mb-1.5 tracking-tight">
-              Upload Image
+              Unggah Citra
             </h2>
             <p className="font-sans text-[12px] text-ink-subtle leading-relaxed mb-6">
-              Select a bitmap image file to initiate LZW compression analysis.
+              Pilih berkas citra bitmap untuk memulai analisis kompresi LZW.
             </p>
 
             {/* DRAG AND DROP ZONE */}
@@ -327,10 +320,10 @@ export default function CompressPage() {
               </svg>
 
               <span className="font-sans text-[13px] font-medium text-ink mb-1">
-                Drag and drop image here
+                Seret & letakkan berkas citra di sini
               </span>
               <span className="font-sans text-[11px] text-ink-subtle">
-                Supports PNG, JPG, or BMP up to 3MB
+                Mendukung format PNG, JPG, atau BMP hingga 3MB
               </span>
             </div>
 
@@ -341,7 +334,7 @@ export default function CompressPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imagePreview}
-                    alt="Upload Preview"
+                    alt="Pratinjau Citra"
                     className="max-w-full max-h-full object-contain"
                   />
                 </div>
@@ -350,10 +343,10 @@ export default function CompressPage() {
                     {file.name}
                   </span>
                   <div className="flex items-center justify-between text-[11px] text-ink-subtle">
-                    <span>File size: {formatBytes(file.size)}</span>
+                    <span>Ukuran berkas: {formatBytes(file.size)}</span>
                     {dimensions && (
                       <span>
-                        Dim: {dimensions.width} × {dimensions.height}
+                        Dimensi: {dimensions.width} × {dimensions.height}
                       </span>
                     )}
                   </div>
@@ -362,7 +355,7 @@ export default function CompressPage() {
                   onClick={handleReset}
                   className="mt-2 text-center font-sans text-[11px] font-medium text-ink-tertiary hover:text-ink-subtle transition-colors"
                 >
-                  Clear File
+                  Hapus Berkas
                 </button>
               </div>
             )}
@@ -373,10 +366,10 @@ export default function CompressPage() {
             <div className="bg-surface-1 border border-hairline rounded-lg p-6 flex flex-col gap-6">
               <div>
                 <h3 className="font-sans font-semibold text-[14px] text-ink mb-1.5 tracking-tight">
-                  Compression Mode
+                  Mode Kompresi
                 </h3>
                 <p className="font-sans text-[12px] text-ink-subtle leading-relaxed mb-4">
-                  Toggle how the analyzer interprets file data for the LZW engine.
+                  Pilih jenis data masukan untuk diproses oleh mesin kompresi LZW.
                 </p>
 
                 {/* Tab select styling */}
@@ -387,7 +380,7 @@ export default function CompressPage() {
                       mode === "pixel" ? "bg-surface-2 text-ink" : "text-ink-subtle hover:text-ink"
                     }`}
                   >
-                    Raw Pixels (RGBA)
+                    Piksel Mentah (RGBA)
                   </button>
                   <button
                     onClick={() => setMode("file")}
@@ -395,7 +388,7 @@ export default function CompressPage() {
                       mode === "file" ? "bg-surface-2 text-ink" : "text-ink-subtle hover:text-ink"
                     }`}
                   >
-                    File Binary Bytes
+                    Byte Biner Berkas
                   </button>
                 </div>
               </div>
@@ -404,11 +397,11 @@ export default function CompressPage() {
               <div className="bg-canvas border border-hairline p-3.5 rounded-md font-sans text-[11px] leading-relaxed text-ink-muted">
                 {mode === "pixel" ? (
                   <p>
-                    <strong className="text-primary">Pixel mode</strong> reads the image's uncompressed RGBA pixel array (width × height × 4 bytes). LZW performs extremely well on this data, showing how repeating color grids shrink dramatically.
+                    <strong className="text-primary">Mode piksel</strong> mengekstrak matriks piksel mentah RGBA (lebar × tinggi × 4 byte) dari citra. LZW bekerja optimal pada redundansi tinggi piksel.
                   </p>
                 ) : (
                   <p>
-                    <strong className="text-ink">Binary mode</strong> reads the actual PNG/JPG file bytes. Because these files are already compressed, LZW encoding will likely expand the footprint due to double compression.
+                    <strong className="text-ink">Mode biner</strong> membaca byte berkas asli secara langsung. Karena berkas masukan sudah terkompresi sebelumnya, ukuran hasil kompresi berpotensi membengkak akibat overhead kamus.
                   </p>
                 )}
               </div>
@@ -419,13 +412,13 @@ export default function CompressPage() {
                 disabled={isCompacting}
                 className="w-full bg-primary hover:bg-primary-hover disabled:bg-primary/50 text-white font-sans text-[13px] font-medium py-2 rounded-md transition-colors"
               >
-                {isCompacting ? "Compressing Payload..." : "Execute LZW Compression"}
+                {isCompacting ? "Sedang Mengompresi..." : "Jalankan Kompresi LZW"}
               </button>
             </div>
           )}
         </div>
 
-        {/* RIGHT PANEL: Results & Analysis Logs */}
+        {/* PANEL KANAN: Hasil & Analisis Log Kamus */}
         <div className="flex-1 flex flex-col gap-6">
           {!result ? (
             <div className="flex-1 min-h-[350px] bg-surface-1 border border-hairline rounded-lg flex flex-col items-center justify-center text-center p-8">
@@ -433,10 +426,10 @@ export default function CompressPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <h3 className="font-sans font-medium text-[15px] text-ink mb-1.5">
-                Ready for Analysis
+                Siap untuk Analisis
               </h3>
               <p className="font-sans text-[12px] text-ink-subtle max-w-[320px] leading-relaxed">
-                Upload a bitmap file on the left panel and click &ldquo;Execute LZW Compression&rdquo; to review dictionary logs, ratio charts, and step traces.
+                Unggah berkas citra bitmap pada panel kiri dan klik &ldquo;Jalankan Kompresi LZW&rdquo; untuk mengamati proses pembentukan kamus dan hasil metrik.
               </p>
             </div>
           ) : (
@@ -448,33 +441,33 @@ export default function CompressPage() {
                 {/* Stat 1 */}
                 <div className="bg-surface-1 border border-hairline p-4 rounded-lg">
                   <span className="font-sans text-[11px] text-ink-subtle block mb-1">
-                    Original Size
+                    Ukuran Awal
                   </span>
                   <span className="font-sans font-semibold text-[16px] text-ink block">
                     {formatBytes(result.originalSize)}
                   </span>
                   <span className="font-mono text-[9px] text-ink-tertiary">
-                    {result.originalSize.toLocaleString()} bytes
+                    {result.originalSize.toLocaleString()} byte
                   </span>
                 </div>
 
                 {/* Stat 2 */}
                 <div className="bg-surface-1 border border-hairline p-4 rounded-lg">
                   <span className="font-sans text-[11px] text-ink-subtle block mb-1">
-                    Compressed Size
+                    Ukuran Hasil
                   </span>
                   <span className="font-sans font-semibold text-[16px] text-ink block">
                     {formatBytes(result.compressedSize)}
                   </span>
                   <span className="font-mono text-[9px] text-ink-tertiary">
-                    {result.compressedSize.toLocaleString()} bytes
+                    {result.compressedSize.toLocaleString()} byte
                   </span>
                 </div>
 
                 {/* Stat 3 */}
                 <div className="bg-surface-1 border border-hairline p-4 rounded-lg">
                   <span className="font-sans text-[11px] text-ink-subtle block mb-1">
-                    Compression Ratio
+                    Rasio Kompresi
                   </span>
                   <span className={`font-sans font-semibold text-[16px] block ${
                     result.ratio >= 1 ? "text-success" : "text-ink-muted"
@@ -482,20 +475,20 @@ export default function CompressPage() {
                     {result.ratio.toFixed(3)}x
                   </span>
                   <span className="font-mono text-[9px] text-ink-tertiary">
-                    {result.ratio >= 1 ? "Size reduced" : "Expanded payload"}
+                    {result.ratio >= 1 ? "Ukuran Menyusut" : "Ukuran Membengkak"}
                   </span>
                 </div>
 
                 {/* Stat 4 */}
                 <div className="bg-surface-1 border border-hairline p-4 rounded-lg">
                   <span className="font-sans text-[11px] text-ink-subtle block mb-1">
-                    Dictionary Count
+                    Jumlah Entri Kamus
                   </span>
                   <span className="font-sans font-semibold text-[16px] text-ink block">
                     {result.dictionarySize.toLocaleString()}
                   </span>
                   <span className="font-mono text-[9px] text-ink-tertiary">
-                    {((result.dictionarySize / 65536) * 100).toFixed(1)}% limit used
+                    {((result.dictionarySize / 65536) * 100).toFixed(1)}% limit terpakai
                   </span>
                 </div>
 
@@ -505,10 +498,10 @@ export default function CompressPage() {
               <div className="bg-surface-1 border border-hairline rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div>
                   <h3 className="font-sans font-semibold text-[14px] text-ink mb-1">
-                    LZW Package Output
+                    Hasil Output Paket LZW
                   </h3>
                   <p className="font-sans text-[12px] text-ink-subtle leading-relaxed">
-                    Compression completed in <strong className="text-ink">{compressTimeMs} ms</strong>. You can export this binary stream or verify its structural integrity.
+                    Kompresi selesai dalam <strong className="text-ink">{compressTimeMs} ms</strong>. Anda dapat mengekspor hasil aliran biner ini atau memverifikasi integritas dekompresinya.
                   </p>
                 </div>
                 
@@ -517,14 +510,14 @@ export default function CompressPage() {
                     onClick={handleVerifyDecompress}
                     className="flex-1 md:flex-initial bg-surface-2 border border-hairline hover:bg-surface-3 text-ink font-sans text-[12px] font-medium px-4 py-2 rounded transition-colors whitespace-nowrap"
                   >
-                    Verify Decompression
+                    Verifikasi Dekompresi
                   </button>
                   
                   <button
                     onClick={handleDownload}
                     className="flex-1 md:flex-initial bg-primary hover:bg-primary-hover text-white font-sans text-[12px] font-medium px-4 py-2 rounded transition-colors"
                   >
-                    Download .lzw
+                    Unduh .lzw
                   </button>
                 </div>
               </div>
@@ -535,36 +528,36 @@ export default function CompressPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-success"></span>
                     <h3 className="font-sans font-semibold text-[14px] text-ink">
-                      Lossless Integrity Confirmed
+                      Integritas Lossless Terkonfirmasi
                     </h3>
                     <span className="bg-surface-2 text-success font-mono text-[10px] px-2 py-0.5 rounded border border-hairline ml-auto">
-                      100% Matching Bytes
+                      100% Byte Cocok
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div className="flex flex-col gap-1">
-                      <span className="font-sans text-[11px] text-ink-subtle">Verification metrics:</span>
+                      <span className="font-sans text-[11px] text-ink-subtle">Metrik verifikasi:</span>
                       <span className="font-sans text-[12px] text-ink-muted">
-                        Decompressed size: <strong>{formatBytes(result.originalSize)}</strong>
+                        Ukuran dekompresi: <strong>{formatBytes(result.originalSize)}</strong>
                       </span>
                       <span className="font-sans text-[12px] text-ink-muted">
-                        Decompress time: <strong>{decompressTimeMs} ms</strong>
+                        Waktu dekompresi: <strong>{decompressTimeMs} ms</strong>
                       </span>
                       <span className="font-sans text-[11px] text-success leading-relaxed mt-2">
-                        ✓ All headers read correctly.<br />
-                        ✓ Output matches initial array index sequences.
+                        ✓ Semua header biner terbaca dengan benar.<br />
+                        ✓ Urutan byte identik dengan data masukan awal.
                       </span>
                     </div>
 
                     {decompressedPreview && (
                       <div className="flex flex-col gap-2">
-                        <span className="font-sans text-[11px] text-ink-subtle">Reconstructed Image:</span>
+                        <span className="font-sans text-[11px] text-ink-subtle">Hasil Rekonstruksi Citra:</span>
                         <div className="relative w-full aspect-video rounded overflow-hidden bg-canvas border border-hairline flex items-center justify-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={decompressedPreview}
-                            alt="Decompressed Preview"
+                            alt="Hasil Dekompresi"
                             className="max-w-full max-h-full object-contain"
                           />
                         </div>
@@ -577,7 +570,7 @@ export default function CompressPage() {
               {verifyError && (
                 <div className="bg-surface-1 border border-red-500/25 rounded-lg p-6">
                   <h3 className="font-sans font-semibold text-[14px] text-red-400 mb-1">
-                    Decompression Verification Failed
+                    Verifikasi Dekompresi Gagal
                   </h3>
                   <p className="font-sans text-[12px] text-red-300 leading-relaxed">
                     {verifyError}
@@ -591,10 +584,10 @@ export default function CompressPage() {
                 {/* WIDGET 1: STEP-BY-STEP TRACE */}
                 <div className="bg-surface-1 border border-hairline rounded-lg p-6 flex flex-col h-[400px]">
                   <h3 className="font-sans font-semibold text-[14px] text-ink mb-1 tracking-tight">
-                    Algorithm Steps Trace
+                    Tabel Penelusuran Langkah
                   </h3>
                   <p className="font-sans text-[11px] text-ink-subtle leading-relaxed mb-4">
-                    First 80 index checks and code operations.
+                    Menampilkan 80 langkah pembacaan indeks dan pengodean kamus pertama.
                   </p>
                   
                   <div className="flex-1 overflow-y-auto border border-hairline bg-canvas rounded-md">
@@ -602,10 +595,10 @@ export default function CompressPage() {
                       <thead className="sticky top-0 bg-surface-2 text-ink-muted text-[10px] font-mono border-b border-hairline">
                         <tr>
                           <th className="p-2 text-center w-8">#</th>
-                          <th className="p-2">Seq (W)</th>
+                          <th className="p-2">Sekuen (W)</th>
                           <th className="p-2 w-8 text-center">+</th>
-                          <th className="p-2">In (K)</th>
-                          <th className="p-2">Result</th>
+                          <th className="p-2">Karakter (K)</th>
+                          <th className="p-2">Hasil Penelusuran</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-hairline font-mono text-[11px] text-ink-subtle">
@@ -626,12 +619,12 @@ export default function CompressPage() {
                             </td>
                             <td className="p-2">
                               {step.found ? (
-                                <span className="text-primary text-[10px]">Found in Dict</span>
+                                <span className="text-primary text-[10px]">Ada di Kamus</span>
                               ) : (
                                 <div className="flex flex-col gap-0.5">
-                                  <span className="text-ink">Emit code {step.outputCode}</span>
+                                  <span className="text-ink">Output kode {step.outputCode}</span>
                                   {step.newCode && (
-                                    <span className="text-ink-tertiary text-[9px]">Add {step.newCode} for [{step.lookaheadKey}]</span>
+                                    <span className="text-ink-tertiary text-[9px]">Tambah {step.newCode} untuk [{step.lookaheadKey}]</span>
                                   )}
                                 </div>
                               )}
@@ -646,18 +639,18 @@ export default function CompressPage() {
                 {/* WIDGET 2: DICTIONARY PREVIEW */}
                 <div className="bg-surface-1 border border-hairline rounded-lg p-6 flex flex-col h-[400px]">
                   <h3 className="font-sans font-semibold text-[14px] text-ink mb-1 tracking-tight">
-                    Dictionary Inspector
+                    Inspektur Kamus LZW
                   </h3>
                   <p className="font-sans text-[11px] text-ink-subtle leading-relaxed mb-4">
-                    Sample generated LZW dictionary indexes.
+                    Sampel representasi indeks kamus dinamis yang berhasil didaftarkan.
                   </p>
                   
                   <div className="flex-1 overflow-y-auto border border-hairline bg-canvas rounded-md">
                     <table className="w-full text-left font-sans text-[12px]">
                       <thead className="sticky top-0 bg-surface-2 text-ink-muted text-[10px] font-mono border-b border-hairline">
                         <tr>
-                          <th className="p-2 w-20">Code Index</th>
-                          <th className="p-2">Sequence Representation</th>
+                          <th className="p-2 w-20">Kode Indeks</th>
+                          <th className="p-2">Representasi Sekuen</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-hairline font-mono text-[11px] text-ink-subtle">
