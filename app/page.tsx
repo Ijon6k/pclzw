@@ -625,17 +625,6 @@ export default function Home() {
 
       </main>
 
-      {/* FOOTER AKADEMIS */}
-      <footer className="w-full bg-canvas border-t border-hairline py-8 px-6 md:px-8 mt-auto">
-        <div className="max-w-[1240px] w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-sans text-[13px] text-ink-subtle text-center md:text-left">
-            Proyek Tugas Akhir Laboratorium Ilmu Komputer & Rekayasa Perangkat Lunak.
-          </p>
-          <p className="font-mono text-[12px] text-ink-tertiary">
-            Dokumen Penelitian LZW &copy; 2026. Hak Cipta Dilindungi.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
