@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+:root {
+  /* Light theme values (Linear inverse canvas scale) */
+  --canvas: #ffffff;
+  --surface-1: #f5f6f6;
+  --surface-2: #f6f7f7;
+  --surface-3: #ededed;
+  --surface-4: #e2e8f0;
+  
+  --hairline: #e2e8f0;
+  --hairline-strong: #cbd5e1;
+  --hairline-tertiary: #cbd5e1;
+  
+  --ink: #000000;
+  --ink-muted: #334155;
+  --ink-subtle: #64748b;
+  --ink-tertiary: #94a3b8;
+  
+  --primary: #5e6ad2;
+  --primary-hover: #828fff;
+  --primary-focus: #5e69d1;
+  --success: #27a644;
+}
+
+/* Default dark scheme overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #010102;
+    --surface-1: #0f1011;
+    --surface-2: #141516;
+    --surface-3: #18191a;
+    --surface-4: #191a1b;
+    
+    --hairline: #23252a;
+    --hairline-strong: #34343a;
+    --hairline-tertiary: #3e3e44;
+    
+    --ink: #f7f8f8;
+    --ink-muted: #d0d6e0;
+    --ink-subtle: #8a8f98;
+    --ink-tertiary: #62666d;
+  }
+}
+
+/* Explicit class-based selectors for light/dark toggle */
+.dark {
+  --canvas: #010102;
+  --surface-1: #0f1011;
+  --surface-2: #141516;
+  --surface-3: #18191a;
+  --surface-4: #191a1b;
+  
+  --hairline: #23252a;
+  --hairline-strong: #34343a;
+  --hairline-tertiary: #3e3e44;
+  
+  --ink: #f7f8f8;
+  --ink-muted: #d0d6e0;
+  --ink-subtle: #8a8f98;
+  --ink-tertiary: #62666d;
+}
+
+.light {
+  --canvas: #ffffff;
+  --surface-1: #f5f6f6;
+  --surface-2: #f6f7f7;
+  --surface-3: #ededed;
+  --surface-4: #e2e8f0;
+  
+  --hairline: #e2e8f0;
+  --hairline-strong: #cbd5e1;
+  --hairline-tertiary: #cbd5e1;
+  
+  --ink: #000000;
+  --ink-muted: #334155;
+  --ink-subtle: #64748b;
+  --ink-tertiary: #94a3b8;
+}
+
+@theme {
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  
+  --color-canvas: var(--canvas);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-hairline-tertiary: var(--hairline-tertiary);
+  
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-tertiary: var(--ink-tertiary);
+  
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-focus: var(--primary-focus);
+  --color-success: var(--success);
+  
+  --font-sans: var(--font-geist-sans), -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+body {
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--hairline-strong);
+}
+
+/* Technical engineering blueprint background grid */
+.technical-grid {
+  background-image: 
+    linear-gradient(var(--hairline) 1px, transparent 1px),
+    linear-gradient(to right, var(--hairline) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Radial fade mask for grid pattern background */
+.hero-grid-mask {
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
